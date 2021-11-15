@@ -17,3 +17,10 @@ Phaser configuration bootstapped with [phaser3-parceljs-template](https://github
 ## Deployment
 
 `yarn build` to bundle
+
+## Useful Resources
+
+I found these materials helpful for getting started with Phaser 3:
+
+- [Tiled RPG map creation tutorial](https://phasertutorials.com/phaser-rpg-tiled-tutorial/)
+- [Getting started with Phaser 3](https://phasertutorials.com/phaser-setup-tutorial/)
