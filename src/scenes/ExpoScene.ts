@@ -1,73 +1,84 @@
 import Phaser from "phaser";
+import { PLAYER_SPEED } from "../constants/player";
 import { SceneKeys } from "../constants/sceneKeys";
 
-// let controls;
-
 export default class ExpoScene extends Phaser.Scene {
+  cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
+  player?: Phaser.GameObjects.Sprite;
+
   constructor() {
     super({ key: SceneKeys.EXPO });
   }
 
   preload() {
     this.load.setBaseURL("./assets");
-    this.load.image("tiles-interior", "tilesets/Interiors_32x32.png");
+    /** TILESETS */
+    this.load.image("tiles-interior", "tilesets/Interiors_free_32x32.png");
+    this.load.image("tiles-walls", "tilesets/Room_Builder_3d_walls_32x32.png");
+    /** SPRITES */
+    this.load.image("player", "sprites/gerenuk.png");
 
-    this.load.tilemapTiledJSON("map", "maps/lexpo_map.json");
+    this.load.tilemapTiledJSON("map", "maps/lexpo-map.json");
 
     // this.load.image("logo", "monkey.png");
     // this.load.image("red", "monkey.png");
   }
 
   create() {
-    this.add.image(500, 500, "tiles-interior");
-    // const map = this.make.tilemap({
-    //   key: "map",
-    //   tileWidth: 32,
-    //   tileHeight: 32,
-    // });
-    // const tilesInterior = map.addTilesetImage(
-    //   "interior_tiles",
-    //   "tiles-interior"
-    // );
-    // map.createLayer("Background", tilesInterior);
+    // this.add.image(500, 500, "tiles-walls");
+    const map = this.make.tilemap({
+      key: "map",
+      tileWidth: 32,
+      tileHeight: 32,
+    });
+    const tilesInterior = map.addTilesetImage(
+      "Interiors_free_32x32",
+      "tiles-interior"
+    );
+    const tilesWalls = map.addTilesetImage(
+      "Room_Builder_3d_walls_32x32",
+      "tiles-walls"
+    );
 
-    // Phaser supports multiple cameras, but you can access the default camera like this:
+    map.createLayer("Background", tilesInterior);
+    const layerWalls = map.createLayer("Walls", tilesWalls);
+    const layerBlocked = map.createLayer("Blocked", tilesInterior);
 
-    // const camera = this.cameras.main;
-    // // Set up the arrows to control the camera
-    // const cursors = this.input.keyboard.createCursorKeys();
-    // controls = new Phaser.Cameras.Controls.FixedKeyControl({
-    //   camera: camera,
-    //   left: cursors.left,
-    //   right: cursors.right,
-    //   up: cursors.up,
-    //   down: cursors.down,
-    //   speed: 0.5,
-    // });
-    // // Constrain the camera so that it isn't allowed to move outside the width/height of tilemap
-    // camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-    // Help text that has a "fixed" position on the screen
-    // this.add
-    //   .text(16, 16, "Arrow keys to scroll", {
-    //     font: "18px monospace",
-    //     padding: { x: 20, y: 10 },
-    //     backgroundColor: "#000000",
-    //   })
-    //   .setScrollFactor(0);
+    // set collision for non-empty tiles in certain layers
+    layerWalls.setCollisionByExclusion([-1]);
+    layerBlocked.setCollisionByExclusion([-1]);
 
-    // const particles = this.add.particles("red");
-    // const emitter = particles.createEmitter({
-    //   speed: 100,
-    //   scale: { start: 1, end: 0 },
-    //   blendMode: "ADD",
-    // });
-    // const logo = this.physics.add.image(400, 100, "logo");
-    // logo.setVelocity(400, 400);
-    // logo.setBounce(1, 1);
-    // logo.setCollideWorldBounds(true);
-    // emitter.startFollow(logo);
+    this.player = this.physics.add.sprite(100, 100, "player");
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.cameras.main.startFollow(this.player);
+    this.physics.add.collider(this.player, layerWalls);
+    this.physics.add.collider(this.player, layerBlocked);
   }
-  // update(_time, delta) {
-  //   controls.update(delta);
-  // }
+  update(_time, _delta) {
+    if (this.cursors && this.player && "setVelocity" in this.player.body) {
+      /** X-CONTROLS */
+      if (this.cursors.left.isDown) {
+        this.player.body.setVelocityX(-PLAYER_SPEED);
+        // this.player.anims.play("left", true);
+      } else if (this.cursors.right.isDown) {
+        this.player.body.setVelocityX(PLAYER_SPEED);
+        // this.player.anims.play("right", true);
+      } else {
+        this.player.body.setVelocityX(0);
+        // this.player.anims.play("idle", true);
+      }
+      /** Y-CONTROLS */
+      if (this.cursors.up.isDown) {
+        this.player.body.setVelocityY(-PLAYER_SPEED);
+      } else if (this.cursors.down.isDown) {
+        this.player.body.setVelocityY(PLAYER_SPEED);
+        // this.player.anims.play("right", true);
+      } else {
+        this.player.body.setVelocityY(0);
+        // this.player.anims.play("right", true);
+      }
+    }
+  }
 }
